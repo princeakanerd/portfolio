@@ -1,26 +1,212 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ------------------------------------------------------------------
+   Design tokens
+   ------------------------------------------------------------------ */
+@theme {
+  /* Warm near-black canvas. Never pure #000 — it kills the grain. */
+  --color-ink: #080706;
+  --color-ink-2: #0e0c0b;
+  --color-ink-3: #16130f;
+  --color-ink-4: #201b16;
+
+  /* Warm paper-white for type */
+  --color-bone: #f2ede7;
+  --color-ash: #8d857b;
+  --color-ash-dim: #5c554e;
+
+  /* The single accent. Everything else is a tint of it. */
+  --color-ember: #ff4a1c;
+  --color-ember-soft: #ff8256;
+  --color-ember-deep: #b32a08;
+
+  --color-line: rgba(242, 237, 231, 0.1);
+  --color-line-strong: rgba(242, 237, 231, 0.22);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+
+  --shadow-ember: 0 0 60px -12px rgba(255, 74, 28, 0.55);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------ */
+/* The canvas background lives on <html> alone. If <body> also paints one, it
+   covers any negative-z-index layer beneath it — which is exactly where
+   full-bleed background canvases want to sit. */
+html {
+  background: var(--color-ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-bone);
+  font-family: var(--font-display);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-ember);
+  color: var(--color-ink);
+}
+
+/* Lenis drives scroll position. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Hide the native cursor only where a real pointer exists. */
+@media (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Utilities
+   ------------------------------------------------------------------ */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ash);
+}
+
+/* Fluid display type — the whole site keys off these three steps. */
+@utility display-xl {
+  font-size: clamp(3.25rem, 13vw, 13rem);
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  font-weight: 700;
+}
+
+@utility display-lg {
+  font-size: clamp(2.5rem, 7.5vw, 6.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+
+@utility display-md {
+  font-size: clamp(1.75rem, 3.6vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  font-weight: 600;
+}
+
+@utility shell {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  max-width: 96rem;
+  @media (width >= 48rem) {
+    padding-inline: 2.5rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 4rem;
+  }
+}
+
+/* Mask-reveal: the wrapper clips, the child slides up from below it. */
+@utility line-clip {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+@utility hairline {
+  border-top: 1px solid var(--color-line);
+}
+
+/* ------------------------------------------------------------------
+   Motion
+   ------------------------------------------------------------------ */
+@keyframes marquee-x {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes ember-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+
+/* Light sweeps across the résumé CTA on a long cycle — enough to catch the
+   eye on a dark page, rare enough not to nag. */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-140%) skewX(-20deg);
+  }
+  55%,
+  100% {
+    transform: translateX(320%) skewX(-20deg);
+  }
+}
+
+/* Slow breathing halo behind the same CTA. */
+@keyframes halo {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+.animate-marquee {
+  animation: marquee-x var(--marquee-duration, 40s) linear infinite;
+  will-change: transform;
+}
+
+.animate-ember-pulse {
+  animation: ember-pulse 2.4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 4.5s ease-in-out infinite;
+}
+
+.animate-halo {
+  animation: halo 3.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-ember-pulse,
+  .animate-shimmer,
+  .animate-halo {
+    animation: none !important;
+  }
 }
