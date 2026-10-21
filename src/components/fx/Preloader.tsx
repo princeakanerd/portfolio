@@ -16,6 +16,9 @@ export default function Preloader() {
   const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [greeting, setGreeting] = useState(0);
+  // Touch devices skip the intro: on a phone it is ~4s of locked screen
+  // before the hero, which reads as a slow site rather than a flourish.
+  const [skip, setSkip] = useState(false);
 
   // Lock scroll for the duration so the hero can't be scrolled past mid-wipe.
   useEffect(() => {
@@ -26,10 +29,11 @@ export default function Preloader() {
   }, [visible]);
 
   useEffect(() => {
-    // Reduced motion skips the whole sequence. Deferred by a frame so the
-    // state change lands outside the effect that scheduled it.
-    if (reduced) {
+    // Reduced motion and touch devices skip the whole sequence. Deferred by
+    // a frame so the state change lands outside the effect that scheduled it.
+    if (reduced || !window.matchMedia("(pointer: fine)").matches) {
       const id = requestAnimationFrame(() => {
+        setSkip(true);
         setVisible(false);
         finish();
       });
@@ -54,7 +58,7 @@ export default function Preloader() {
     };
   }, [reduced, finish]);
 
-  if (reduced) return null;
+  if (reduced || skip) return null;
 
   return (
     <AnimatePresence onExitComplete={finish}>
