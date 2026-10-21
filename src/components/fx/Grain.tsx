@@ -19,7 +19,7 @@ export default function Grain() {
         </filter>
       </svg>
       <div
-        className="absolute inset-0 opacity-[0.16] mix-blend-overlay"
+        className="absolute inset-0 hidden opacity-[0.16] mix-blend-overlay pointer-fine:block"
         style={{ filter: "url(#grain-filter)" }}
       />
       <div

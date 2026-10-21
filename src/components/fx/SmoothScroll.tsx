@@ -12,7 +12,9 @@ export default function SmoothScroll() {
   const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
-    if (reduced) return;
+    // Touch devices already scroll natively and smoothly; Lenis would only
+    // add a permanent rAF loop there.
+    if (reduced || !window.matchMedia("(pointer: fine)").matches) return;
 
     const lenis = new Lenis({
       duration: 1.15,

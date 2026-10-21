@@ -1,5 +1,7 @@
 "use client";
 
+import { Fragment } from "react";
+
 import { motion, type Variants } from "motion/react";
 import type { ReactNode } from "react";
 
@@ -66,27 +68,27 @@ export function MaskText({
       {/* Per-word spans concatenate without whitespace, so expose the intact
           sentence to assistive tech and copy-paste, and hide the split copy. */}
       <span className="sr-only">{text}</span>
+      {/* Real spaces between the word boxes: without whitespace there is no
+          wrap opportunity, and a long heading runs off narrow screens. */}
       {words.map((word, i) => (
-        <span
-          key={`${word}-${i}`}
-          aria-hidden
-          className="line-clip mr-[0.26em] inline-block"
-        >
-          <motion.span
-            className={`inline-block will-change-transform ${wordClassName}`}
-            variants={{
-              hidden: { y: "110%", opacity: 0, rotate: 3 },
-              visible: {
-                y: "0%",
-                opacity: 1,
-                rotate: 0,
-                transition: { duration: 0.95, ease: EASE },
-              },
-            }}
-          >
-            {word}
-          </motion.span>
-        </span>
+        <Fragment key={`${word}-${i}`}>
+          <span aria-hidden className="line-clip inline-block">
+            <motion.span
+              className={`inline-block will-change-transform ${wordClassName}`}
+              variants={{
+                hidden: { y: "110%", opacity: 0, rotate: 3 },
+                visible: {
+                  y: "0%",
+                  opacity: 1,
+                  rotate: 0,
+                  transition: { duration: 0.95, ease: EASE },
+                },
+              }}
+            >
+              {word}
+            </motion.span>
+          </span>{" "}
+        </Fragment>
       ))}
     </MotionTag>
   );

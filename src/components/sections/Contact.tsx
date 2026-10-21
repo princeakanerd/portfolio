@@ -136,7 +136,10 @@ export default function Contact() {
           </p>
           <p className="label flex items-center gap-2">
             <span className="animate-ember-pulse inline-block h-1.5 w-1.5 rounded-full bg-ember" />
-            {person.location} · <LiveClock /> {person.timezoneLabel}
+            {/* One inline run, so flex doesn't split the text into columns. */}
+            <span>
+              {person.location} · <LiveClock /> {person.timezoneLabel}
+            </span>
           </p>
           <p className="label hidden md:block">Next.js · WebGL · Motion</p>
           <motion.a

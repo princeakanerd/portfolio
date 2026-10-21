@@ -45,7 +45,7 @@ export default function Nav() {
         <div
           className={`transition-all duration-500 ${
             condensed
-              ? "border-b border-line bg-ink/70 backdrop-blur-xl"
+              ? "border-b border-line bg-ink/92 pointer-fine:bg-ink/70 pointer-fine:backdrop-blur-xl"
               : "border-b border-transparent"
           }`}
         >

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePrefersReducedMotion } from "@/lib/hooks";
+import { useFinePointer, usePrefersReducedMotion } from "@/lib/hooks";
 
 const VERT = `
 attribute vec2 a_pos;
@@ -122,6 +122,9 @@ export default function ShaderField({ className = "" }: { className?: string }) 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = useState(false);
   const reduced = usePrefersReducedMotion();
+  // Phones get the CSS field: a full-screen fragment shader is the single
+  // biggest battery and scroll cost on mobile, and the difference is subtle.
+  const fine = useFinePointer();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -253,11 +256,11 @@ export default function ShaderField({ className = "" }: { className?: string }) 
       window.removeEventListener("pointermove", onMove);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [reduced]);
+  }, [reduced, fine]);
 
   // No WebGL (blocked, software-disabled, very old device): a layered CSS
   // approximation of the same field, so the hero never falls back to flat black.
-  if (failed) {
+  if (failed || !fine) {
     return (
       <div
         aria-hidden

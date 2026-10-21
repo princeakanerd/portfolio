@@ -145,6 +145,7 @@ export default function Sports() {
   const arenaRef = useRef<HTMLDivElement>(null);
   const ballRefs = useRef<(HTMLDivElement | null)[]>([]);
   const artRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const labelRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const bodies = useRef<Body[]>([]);
   const drag = useRef<Drag | null>(null);
   const cursor = useRef({ x: 0, y: 0, t: 0 });
@@ -158,7 +159,9 @@ export default function Sports() {
 
     let w = arena.clientWidth;
     let h = arena.clientHeight;
-    const scale = () => Math.min(1, Math.max(0.5, w / 820));
+    // Phones get a higher floor: the balls pile into two layers instead of
+    // shrinking until their labels no longer fit.
+    const scale = () => Math.min(1, Math.max(0.75, w / 820));
 
     const s = scale();
     bodies.current = SKINS.map((skin, i) => {
@@ -169,18 +172,48 @@ export default function Sports() {
         : { x, y: -r - i * 160, vx: (i % 2 ? -1 : 1) * 120, vy: 0, r, a: 0 };
     });
 
+    /* Size each ball, then shrink its label until it sits inside the circle.
+       Runs on layout changes only, never per frame. */
+    const fit = () => {
+      bodies.current.forEach((b, i) => {
+        const el = ballRefs.current[i];
+        const label = labelRefs.current[i];
+        if (!el) return;
+        el.style.width = el.style.height = `${b.r * 2}px`;
+        el.style.fontSize = `${b.r * 0.4}px`;
+        if (!label) return;
+        label.style.transform = "none";
+        // Safe box inside the circle: 78% wide, 62% tall.
+        const k = Math.min(1, (b.r * 1.56) / label.offsetWidth, (b.r * 1.24) / label.offsetHeight);
+        label.style.transform = `scale(${k})`;
+      });
+    };
+    fit();
+    document.fonts?.ready.then(fit);
+
     const ro = new ResizeObserver(() => {
       w = arena.clientWidth;
       h = arena.clientHeight;
       const k = scale();
       bodies.current.forEach((b, i) => (b.r = SKINS[i].r * k));
+      fit();
     });
     ro.observe(arena);
+
+    // Only simulate while the arena is on screen.
+    let visible = true;
+    const io = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting));
+    io.observe(arena);
 
     let raf = 0;
     let last = performance.now();
 
     const step = (now: number) => {
+      if (!visible || document.hidden) {
+        last = now;
+        raf = requestAnimationFrame(step);
+        return;
+      }
       const dt = Math.min(0.032, (now - last) / 1000);
       last = now;
       const list = bodies.current;
@@ -248,8 +281,6 @@ export default function Sports() {
         const el = ballRefs.current[i];
         const art = artRefs.current[i];
         if (!el) continue;
-        el.style.width = el.style.height = `${b.r * 2}px`;
-        el.style.fontSize = `${b.r * 0.4}px`;
         el.style.transform = `translate3d(${b.x - b.r}px, ${b.y - b.r}px, 0)`;
         el.style.opacity = "1";
         if (art) art.style.transform = `rotate(${b.a}rad)`;
@@ -262,6 +293,7 @@ export default function Sports() {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      io.disconnect();
     };
   }, [inView, reduced]);
 
@@ -400,7 +432,13 @@ export default function Sports() {
                     className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center"
                     style={{ color: skin.ink, textShadow: skin.shadow }}
                   >
-                    <span className="font-mono text-[max(9px,0.24em)] font-semibold tracking-[0.18em] uppercase opacity-85">
+                    <span
+                      ref={(el) => {
+                        labelRefs.current[i] = el;
+                      }}
+                      className="inline-flex flex-col items-center"
+                    >
+                    <span className="font-mono text-[max(8px,0.24em)] font-semibold tracking-[0.14em] uppercase opacity-85">
                       {s.event}
                     </span>
                     <span
@@ -408,8 +446,9 @@ export default function Sports() {
                       className="mt-[0.18em] -skew-x-10 leading-none font-bold tracking-tight whitespace-nowrap tabular-nums">
                       {s.ball.head}
                     </span>
-                    <span className="mt-[0.4em] font-mono text-[max(9px,0.22em)] font-semibold tracking-[0.12em] whitespace-nowrap uppercase opacity-85">
+                    <span className="mt-[0.4em] font-mono text-[max(7.5px,0.22em)] font-semibold tracking-[0.06em] whitespace-nowrap uppercase opacity-85">
                       {s.ball.sub}
+                    </span>
                     </span>
                   </div>
                 </div>
